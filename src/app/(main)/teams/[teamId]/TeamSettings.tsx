@@ -6,6 +6,7 @@ import { useLoginQuery, useMessages, useNavigation, useTeam } from '@/components
 import { Users } from '@/components/icons';
 import { ROLES } from '@/lib/constants';
 import { TeamsMemberAddButton } from '../TeamsMemberAddButton';
+import { InviteMemberButton } from './InviteMemberButton';
 import { TeamEditForm } from './TeamEditForm';
 import { TeamManage } from './TeamManage';
 import { TeamMembersDataTable } from './TeamMembersDataTable';
@@ -41,7 +42,12 @@ export function TeamSettings({ teamId }: { teamId: string }) {
       <Panel>
         <Row alignItems="center" justifyContent="space-between">
           <Heading size="base">{t(labels.members)}</Heading>
-          {isAdmin && <TeamsMemberAddButton teamId={teamId} />}
+          {isAdmin && (
+            <Row gap="2">
+              <InviteMemberButton teamId={teamId} />
+              <TeamsMemberAddButton teamId={teamId} />
+            </Row>
+          )}
         </Row>
         <TeamMembersDataTable teamId={teamId} allowEdit={canEdit} />
       </Panel>
