@@ -253,6 +253,8 @@ function parseFilters(filters: Record<string, any>, options?: QueryOptions) {
 }
 
 async function rawQuery(sql: string, data: Record<string, any>, name?: string): Promise<any> {
+  const client = getClientInstance();
+
   if (process.env.LOG_QUERY) {
     log('QUERY:\n', sql);
     log('PARAMETERS:\n', data);
@@ -282,6 +284,7 @@ async function rawQuery(sql: string, data: Record<string, any>, name?: string): 
 }
 
 async function pagedQuery<T>(model: string, criteria: T, filters?: QueryFilters) {
+  const client = getClientInstance();
   const { page = 1, pageSize, orderBy, sortDescending = false, search } = filters || {};
   const size = +pageSize || DEFAULT_PAGE_SIZE;
 
@@ -358,19 +361,29 @@ function getSearchParameters(query: string, filters: Record<string, any>[]) {
 }
 
 function transaction(input: any, options?: any) {
+  const client = getClientInstance();
   return client.$transaction(input, options);
 }
 
 function getSchema() {
+  if (!process.env.DATABASE_URL) {
+    return null;
+  }
+
   const connectionUrl = new URL(process.env.DATABASE_URL);
 
   return connectionUrl.searchParams.get('schema');
 }
 
-function getClient() {
+function createClient() {
   const url = process.env.DATABASE_URL;
   const replicaUrl = process.env.DATABASE_REPLICA_URL;
   const logQuery = process.env.LOG_QUERY;
+
+  if (!url) {
+    throw new Error('DATABASE_URL is not configured.');
+  }
+
   const schema = getSchema();
 
   const baseAdapter = new PrismaPg({ connectionString: url }, { schema });
@@ -415,10 +428,18 @@ function getClient() {
   return extended;
 }
 
-const client = (globalThis[PRISMA] || getClient()) as ReturnType<typeof getClient>;
+function getClientInstance() {
+  if (!globalThis[PRISMA]) {
+    globalThis[PRISMA] = createClient();
+  }
+
+  return globalThis[PRISMA] as ReturnType<typeof createClient>;
+}
 
 export default {
-  client,
+  get client() {
+    return getClientInstance();
+  },
   transaction,
   getAddIntervalQuery,
   getCastColumnQuery,

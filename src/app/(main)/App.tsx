@@ -15,6 +15,9 @@ export function App({ children }) {
   const config = useConfig();
   const { pathname, router, teamId } = useNavigation();
   const { isLoading: isTeamLoading, error: teamError } = useTeamQuery(teamId);
+  const requiresPasswordChange = Boolean(user?.requiresPasswordChange);
+  const isPasswordChangeRoute = pathname === '/force-password';
+  const isLogoutRoute = pathname === '/logout';
 
   useEffect(() => {
     if (teamId) {
@@ -30,6 +33,21 @@ export function App({ children }) {
       router.replace('/');
     }
   }, [teamId, teamError, router]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    if (requiresPasswordChange && !isPasswordChangeRoute && !isLogoutRoute) {
+      router.replace('/force-password');
+      return;
+    }
+
+    if (!requiresPasswordChange && isPasswordChangeRoute) {
+      router.replace('/');
+    }
+  }, [isLogoutRoute, isPasswordChangeRoute, requiresPasswordChange, router, user]);
 
   if (isLoading || !config || (teamId && isTeamLoading)) {
     return <Loading placement="absolute" />;
@@ -48,6 +66,10 @@ export function App({ children }) {
 
   if (teamId && teamError) {
     return null;
+  }
+
+  if (requiresPasswordChange && !isPasswordChangeRoute && !isLogoutRoute) {
+    return <Loading placement="absolute" />;
   }
 
   return (

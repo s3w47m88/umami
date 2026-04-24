@@ -1,7 +1,7 @@
-import type { ReactQueryOptions } from '@/lib/types';
-import { useApi } from '../useApi';
-import { useModified } from '../useModified';
-import { usePagedQuery } from '../usePagedQuery';
+import type { ReactQueryOptions } from "@/lib/types";
+import { useApi } from "../useApi";
+import { useModified } from "../useModified";
+import { usePagedQuery } from "../usePagedQuery";
 
 export function useUserWebsitesQuery(
   { userId, teamId }: { userId?: string; teamId?: string },
@@ -12,15 +12,16 @@ export function useUserWebsitesQuery(
   const { modified } = useModified(`websites`);
 
   return usePagedQuery({
-    queryKey: ['websites', { userId, teamId, modified, ...params }],
-    queryFn: pageParams => {
+    queryKey: ["websites", { userId, teamId, modified, ...params }],
+    queryFn: (pageParams) => {
       return get(
         teamId
           ? `/teams/${teamId}/websites`
           : userId
             ? `/users/${userId}/websites`
-            : '/me/websites',
+            : "/me/websites",
         {
+          includeTeams: !teamId,
           ...pageParams,
           ...params,
         },

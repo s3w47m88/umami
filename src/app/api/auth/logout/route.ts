@@ -2,6 +2,8 @@ import redis from '@/lib/redis';
 import { parseRequest } from '@/lib/request';
 import { ok } from '@/lib/response';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   const { error } = await parseRequest(request);
 

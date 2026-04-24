@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     id: id || uuid(),
     username,
     password: hashPassword(password),
+    requiresPasswordChange: true,
     role: role ?? ROLES.user,
   });
 

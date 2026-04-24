@@ -3,14 +3,8 @@ import { useMessages, useModified } from '@/components/hooks';
 import { UserPlus } from '@/components/icons';
 import { InviteMemberForm } from './InviteMemberForm';
 
-export function InviteMemberButton({
-  teamId,
-  onSave,
-}: {
-  teamId: string;
-  onSave?: () => void;
-}) {
-  const { t, labels, messages } = useMessages();
+export function InviteMemberButton({ teamId, onSave }: { teamId: string; onSave?: () => void }) {
+  const { t, messages } = useMessages();
   const { toast } = useToast();
   const { touch } = useModified();
 
@@ -26,10 +20,10 @@ export function InviteMemberButton({
         <Icon>
           <UserPlus />
         </Icon>
-        <Text>{t('Invite Member')}</Text>
+        <Text>{t('Invite / Create Member')}</Text>
       </Button>
       <Modal>
-        <Dialog title={t('Invite New Member')} style={{ width: 400 }}>
+        <Dialog title={t('Invite / Create Member')} style={{ width: 480 }}>
           {({ close }) => <InviteMemberForm teamId={teamId} onSave={handleSave} onClose={close} />}
         </Dialog>
       </Modal>

@@ -9,6 +9,8 @@ import { parseRequest } from '@/lib/request';
 import { json, unauthorized } from '@/lib/response';
 import { getAllUserTeams, getUserByUsername } from '@/queries/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   const schema = z.object({
     username: z.string(),
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
     return unauthorized({ code: 'incorrect-username-password' });
   }
 
-  const { id, role, createdAt } = user;
+  const { id, role, createdAt, requiresPasswordChange } = user;
 
   let token: string;
 
@@ -43,6 +45,14 @@ export async function POST(request: Request) {
 
   return json({
     token,
-    user: { id, username, role, createdAt, isAdmin: role === ROLES.admin, teams },
+    user: {
+      id,
+      username,
+      role,
+      createdAt,
+      isAdmin: role === ROLES.admin,
+      requiresPasswordChange,
+      teams,
+    },
   });
 }

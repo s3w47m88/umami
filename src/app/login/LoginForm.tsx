@@ -5,14 +5,13 @@ import {
   FormField,
   FormSubmitButton,
   Heading,
-  Icon,
   PasswordField,
   TextField,
 } from '@umami/react-zen';
 import { useRouter } from 'next/navigation';
 import { useMessages, useUpdateQuery } from '@/components/hooks';
-import { Logo } from '@/components/svg';
 import { setClientAuthToken } from '@/lib/client';
+import { getPostLoginPath } from '@/lib/user-security';
 import { setUser } from '@/store/app';
 
 export function LoginForm() {
@@ -25,17 +24,27 @@ export function LoginForm() {
       onSuccess: async ({ token, user }) => {
         setClientAuthToken(token);
         setUser(user);
-        router.push('/');
+        router.push(getPostLoginPath(user));
       },
     });
   };
 
   return (
     <Column justifyContent="center" alignItems="center" gap="6">
-      <Icon size="lg">
-        <Logo />
-      </Icon>
-      <Heading>umami</Heading>
+      <Column alignItems="center" gap="3">
+        <img
+          src="/images/the-portland-company-logo.png"
+          alt="The Portland Company"
+          style={{
+            height: 48,
+            objectFit: 'contain',
+            width: 48,
+          }}
+        />
+        <Column alignItems="center" gap="1">
+          <Heading>The Portland Company</Heading>
+        </Column>
+      </Column>
       <Form onSubmit={handleSubmit} error={getErrorMessage(error)} style={{ minWidth: 300 }}>
         <FormField
           label={t(labels.username)}

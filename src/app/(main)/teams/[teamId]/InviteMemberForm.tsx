@@ -4,13 +4,17 @@ import {
   FormButtons,
   FormField,
   FormSubmitButton,
-  Input,
   ListItem,
+  PasswordField,
   Select,
+  Text,
+  TextField,
 } from '@umami/react-zen';
-import { useMessages, useUpdateQuery } from '@/components/hooks';
-import { ROLES } from '@/lib/constants';
 import { useState } from 'react';
+import { MultiSelect } from '@/components/common/MultiSelect';
+import { useApi, useMessages, useTeamsQuery } from '@/components/hooks';
+import { ROLES } from '@/lib/constants';
+import { getInviteFormDefaults, getInviteTeamIds, shouldSendInviteEmail } from './invite-utils';
 
 const roles = [ROLES.teamManager, ROLES.teamMember, ROLES.teamViewOnly];
 
@@ -24,40 +28,35 @@ export function InviteMemberForm({
   onClose?: () => void;
 }) {
   const { t, labels, getErrorMessage } = useMessages();
-  const { mutateAsync: addMember, error: addError, isPending } = useUpdateQuery(`/teams/${teamId}/users`);
+  const { post } = useApi();
+  const { data: teams, isLoading: isTeamsLoading } = useTeamsQuery({ pageSize: 100 });
   const [createError, setCreateError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([teamId]);
 
   const handleSubmit = async (data: any) => {
     setCreateError(null);
+    setIsSaving(true);
 
     try {
-      // First, create the user
-      const createResponse = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: data.username, password: data.password, role: ROLES.user }),
+      await post(`/teams/${teamId}/users/invite`, {
+        username: data.username,
+        password: data.password,
+        role: data.role,
+        teamIds: getInviteTeamIds(teamId, selectedTeamIds),
+        sendInviteEmail: shouldSendInviteEmail(data.sendInviteEmail),
       });
 
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json();
-        throw new Error(errorData.message || 'Failed to create user');
-      }
-
-      const newUser = await createResponse.json();
-
-      // Then, add to team
-      await addMember({ userId: newUser.id, role: data.role }, {
-        onSuccess: async () => {
-          onSave?.();
-          onClose?.();
-        },
-      });
+      onSave?.();
+      onClose?.();
     } catch (error) {
-      setCreateError(getErrorMessage(error));
+      setCreateError(getErrorMessage(error instanceof Error ? error : String(error)));
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const renderRole = (roleValue) => {
+  const renderRole = roleValue => {
     switch (roleValue) {
       case ROLES.teamManager:
         return t(labels.manager);
@@ -68,18 +67,39 @@ export function InviteMemberForm({
     }
   };
 
+  const renderTeams = (values: string[]) => {
+    if (values.length === 0) {
+      return t('Select teams');
+    }
+
+    const names = values
+      .map(value => teams?.data?.find(({ id }) => id === value)?.name)
+      .filter(Boolean);
+
+    return names.length > 0 ? names.join(', ') : values.join(', ');
+  };
+
   return (
-    <Form onSubmit={handleSubmit} error={createError || getErrorMessage(addError)}>
+    <Form
+      onSubmit={handleSubmit}
+      error={createError}
+      values={getInviteFormDefaults()}
+    >
       <FormField name="username" label={t(labels.username)} rules={{ required: 'Required' }}>
-        <Input
-          type="email"
-          placeholder="user@example.com"
-        />
+        <TextField />
       </FormField>
-      <FormField name="password" label={t(labels.password)} rules={{ required: 'Required', minLength: { value: 8, message: 'Minimum 8 characters' } }}>
-        <Input
-          type="password"
-        />
+      <FormField
+        name="password"
+        label={t(labels.password)}
+        rules={{ required: 'Required', minLength: { value: 8, message: 'Minimum 8 characters' } }}
+      >
+        <PasswordField />
+      </FormField>
+      <FormField name="sendInviteEmail" label={t('Send invite email')}>
+        <Select>
+          <ListItem id="false">{t('Do not send email')}</ListItem>
+          <ListItem id="true">{t('Send invite email')}</ListItem>
+        </Select>
       </FormField>
       <FormField name="role" label={t(labels.role)} rules={{ required: 'Required' }}>
         <Select renderValue={value => renderRole(value)}>
@@ -90,12 +110,29 @@ export function InviteMemberForm({
           ))}
         </Select>
       </FormField>
+      <FormField name="teamIds" label={t(labels.teams)}>
+        <MultiSelect
+          value={selectedTeamIds}
+          onChange={setSelectedTeamIds}
+          placeholder={isTeamsLoading ? t('Loading...') : t('Select teams')}
+          renderValue={renderTeams}
+        >
+          {teams?.data?.map(({ id, name }) => (
+            <ListItem key={id} id={id}>
+              {name}
+            </ListItem>
+          ))}
+        </MultiSelect>
+        <Text color="muted" size="sm">
+          {t('Invite email sends through Resend when selected.')}
+        </Text>
+      </FormField>
       <FormButtons>
-        <Button isDisabled={isPending} onPress={onClose}>
+        <Button isDisabled={isSaving} onPress={onClose}>
           {t(labels.cancel)}
         </Button>
-        <FormSubmitButton variant="primary" isDisabled={isPending}>
-          {t('Invite')}
+        <FormSubmitButton variant="primary" isDisabled={isSaving}>
+          {t('Create member')}
         </FormSubmitButton>
       </FormButtons>
     </Form>

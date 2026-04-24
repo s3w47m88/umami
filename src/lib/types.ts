@@ -18,6 +18,7 @@ export interface Auth {
     username: string;
     role: string;
     isAdmin: boolean;
+    requiresPasswordChange?: boolean;
   };
   shareToken?: {
     websiteId?: string;

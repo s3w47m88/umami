@@ -24,6 +24,7 @@ async function findUser(criteria: Prisma.UserFindUniqueArgs, options: GetUserOpt
       id: true,
       username: true,
       password: includePassword,
+      requiresPasswordChange: true,
       role: true,
       createdAt: true,
     },
@@ -72,6 +73,7 @@ export async function createUser(data: {
   id: string;
   username: string;
   password: string;
+  requiresPasswordChange?: boolean;
   role: Role;
 }) {
   return prisma.client.user.create({
@@ -79,6 +81,7 @@ export async function createUser(data: {
     select: {
       id: true,
       username: true,
+      requiresPasswordChange: true,
       role: true,
     },
   });
@@ -93,6 +96,7 @@ export async function updateUser(userId: string, data: Prisma.UserUpdateInput) {
     select: {
       id: true,
       username: true,
+      requiresPasswordChange: true,
       role: true,
       createdAt: true,
     },

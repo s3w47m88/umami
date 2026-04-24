@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
   const password = hashPassword(newPassword);
 
-  const updated = await updateUser(userId, { password });
+  const updated = await updateUser(userId, { password, requiresPasswordChange: false });
 
   return json(updated);
 }

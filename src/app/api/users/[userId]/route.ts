@@ -3,6 +3,7 @@ import { hashPassword } from '@/lib/password';
 import { parseRequest } from '@/lib/request';
 import { badRequest, json, notFound, ok, unauthorized } from '@/lib/response';
 import { userRoleParam } from '@/lib/schema';
+import { shouldForcePasswordChange } from '@/lib/user-security';
 import { canDeleteUser, canUpdateUser, canViewUser } from '@/permissions';
 import { deleteUser, getUser, getUserByUsername, updateUser } from '@/queries/prisma';
 
@@ -55,6 +56,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ use
 
   if (password) {
     data.password = hashPassword(password);
+    data.requiresPasswordChange = shouldForcePasswordChange(password);
   }
 
   // Only admin can change these fields
