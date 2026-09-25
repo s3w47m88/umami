@@ -50,6 +50,11 @@ RUN pnpm --allow-build='@prisma/engines' add npm-run-all dotenv chalk semver \
     @prisma/client@${PRISMA_VERSION} \
     @prisma/adapter-pg@${PRISMA_VERSION}
 
+# Next's standalone output (copied below) ships partial, trace-only copies of some of these
+# packages (semver lost index.js), which then shadow the full ones check-db.js needs. Keep full
+# copies aside and lay them back over the standalone node_modules.
+RUN mkdir -p /opt/script-deps && for p in semver chalk dotenv; do cp -rL node_modules/$p /opt/script-deps/; done
+
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
@@ -59,6 +64,7 @@ COPY --from=builder /app/generated ./generated
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+RUN for p in semver chalk dotenv; do mkdir -p node_modules/$p && cp -rL /opt/script-deps/$p/. node_modules/$p/; done
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
