@@ -8,6 +8,12 @@ export function InviteMemberButton({ teamId, onSave }: { teamId: string; onSave?
   const { toast } = useToast();
   const { touch } = useModified();
 
+  // Membership is TPC Auth's job now (grant the org, not this app, access). Native invites are
+  // disabled whenever TPC Auth sign-in is enabled (see DISABLE_LOGIN / NEXT_PUBLIC_TPC_AUTH_ENABLED).
+  if (process.env.NEXT_PUBLIC_TPC_AUTH_ENABLED) {
+    return null;
+  }
+
   const handleSave = async () => {
     toast(t(messages.saved));
     touch('teams:members');

@@ -3,7 +3,7 @@ import { ROLES } from '@/lib/constants';
 import { uuid } from '@/lib/crypto';
 import { hashPassword } from '@/lib/password';
 import { parseRequest } from '@/lib/request';
-import { json, serverError, unauthorized } from '@/lib/response';
+import { badRequest, json, serverError, unauthorized } from '@/lib/response';
 import { teamRoleParam } from '@/lib/schema';
 import { canUpdateTeam } from '@/permissions';
 import {
@@ -66,6 +66,14 @@ async function sendInviteEmail({
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ teamId: string }> }) {
+  // Membership is granted in TPC Auth (org membership), not here. Once TPC Auth sign-in is on,
+  // this endpoint is dead: point people at the org's access settings in TPC Auth instead.
+  if (process.env.NEXT_PUBLIC_TPC_AUTH_ENABLED) {
+    return badRequest({
+      message: 'Invites are managed in TPC Auth. Grant access to the organization there instead.',
+    });
+  }
+
   const schema = z.object({
     username: z.string().email().max(255),
     password: z.string().min(8).max(255),

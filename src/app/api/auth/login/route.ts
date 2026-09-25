@@ -12,6 +12,11 @@ import { getAllUserTeams, getUserByUsername } from '@/queries/prisma';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
+  // Password login is disabled once TPC Auth is the identity provider (see /api/auth/tpc).
+  if (process.env.TPC_AUTH_ENABLED) {
+    return unauthorized({ code: 'password-login-disabled' });
+  }
+
   const schema = z.object({
     username: z.string(),
     password: z.string(),
