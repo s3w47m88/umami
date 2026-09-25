@@ -186,6 +186,8 @@ if (isProd && cloudMode) {
 /** @type {import('next').NextConfig} */
 export default withNextIntl({
   reactStrictMode: false,
+  // Cap build workers: the default (one per CPU) runs Docker Desktop's VM out of memory.
+  ...(process.env.NEXT_BUILD_CPUS && { experimental: { cpus: Number(process.env.NEXT_BUILD_CPUS) } }),
   env: {
     basePath,
     cloudMode,
