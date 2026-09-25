@@ -17,6 +17,9 @@ COPY . .
 COPY docker/proxy.ts ./src
 
 ARG BASE_PATH
+# TPC Auth: NEXT_PUBLIC_* is inlined at build time, so the flag that hides native invites is baked in here.
+ARG NEXT_PUBLIC_TPC_AUTH_ENABLED=1
+ENV NEXT_PUBLIC_TPC_AUTH_ENABLED=$NEXT_PUBLIC_TPC_AUTH_ENABLED
 
 ENV BASE_PATH=$BASE_PATH
 ENV NEXT_TELEMETRY_DISABLED=1

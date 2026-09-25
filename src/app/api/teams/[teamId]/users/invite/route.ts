@@ -68,7 +68,7 @@ async function sendInviteEmail({
 export async function POST(request: Request, { params }: { params: Promise<{ teamId: string }> }) {
   // Membership is granted in TPC Auth (org membership), not here. Once TPC Auth sign-in is on,
   // this endpoint is dead: point people at the org's access settings in TPC Auth instead.
-  if (process.env.NEXT_PUBLIC_TPC_AUTH_ENABLED) {
+  if (process.env.TPC_AUTH_ENABLED || process.env.NEXT_PUBLIC_TPC_AUTH_ENABLED) {
     return badRequest({
       message: 'Invites are managed in TPC Auth. Grant access to the organization there instead.',
     });
