@@ -28,6 +28,22 @@ jobs:
           echo "TAG=$TAG" >> "$GITHUB_ENV"
           docker build --platform linux/amd64 -t "$TAG" .
 
+      # Boot the image with the Worker's env shape (no real DB) and fail before pushing if it
+      # doesn't come up. A broken image here took analytics down on 2026-09-25.
+      - name: Boot check
+        run: |
+          docker run -d --name boot -p 3000:3000 \
+            -e DATABASE_URL=postgresql://u:p@127.0.0.1:5432/x -e SKIP_DB_CHECK=1 -e APP_SECRET=ci -e FORCE_SSL=1 -e DISABLE_TELEMETRY=1 -e PORT=3000 \
+            -e DISABLE_LOGIN=1 -e TPC_AUTH_ENABLED=1 -e NEXT_PUBLIC_TPC_AUTH_ENABLED=1 \
+            -e TPC_AUTH_ISSUER=https://auth.theportlandcompany.com -e TPC_CLIENT_ID=tpc-analytics-umami \
+            -e TPC_RESOURCE=https://analytics.theportlandcompany.com "$TAG"
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:3000/api/heartbeat && ok=1 && break
+            sleep 3
+          done
+          docker logs boot 2>&1 | tail -60
+          [ "${ok:-}" = 1 ]
+
       - name: Push to Cloudflare registry
         run: npx -y wrangler@4 containers push "$TAG"
 
