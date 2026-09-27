@@ -12,6 +12,9 @@ export const dynamic = 'force-dynamic';
 const ISSUER = (process.env.TPC_AUTH_ISSUER || 'https://auth.theportlandcompany.com').replace(/\/$/, '');
 const CLIENT_ID = process.env.TPC_CLIENT_ID || 'tpc-analytics-umami';
 const RESOURCE = (process.env.TPC_RESOURCE || 'https://analytics.theportlandcompany.com').replace(/\/$/, '');
+// The container sees the Worker's internal URL, not the public one, so request.url's origin can't
+// build the redirect_uri (TPC Auth matches it exactly against the one the Worker sent).
+const PUBLIC_ORIGIN = new URL(process.env.TPC_PUBLIC_ORIGIN || RESOURCE).origin;
 
 function readCookie(request: Request, name: string): string | null {
   const match = (request.headers.get('cookie') ?? '').match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
@@ -49,7 +52,7 @@ export async function GET(request: Request) {
     tokens = await oidc.exchangeCode({
       issuer: ISSUER,
       clientId: CLIENT_ID,
-      redirectUri: `${url.origin}/api/auth/tpc`,
+      redirectUri: `${PUBLIC_ORIGIN}/api/auth/tpc`,
       code,
       codeVerifier: verifier,
       resource: RESOURCE,
@@ -77,7 +80,7 @@ export async function GET(request: Request) {
 
   const { token } = await syncUmamiFromTpcContext(ctx);
 
-  const redirectUrl = new URL('/sso', url.origin);
+  const redirectUrl = new URL('/sso', PUBLIC_ORIGIN);
   redirectUrl.searchParams.set('token', token);
   redirectUrl.searchParams.set('next', next);
 
