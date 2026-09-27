@@ -59,7 +59,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error(JSON.stringify({ route: 'tpc-auth-callback', error: String(error) }));
-    return new Response('TPC Auth sign-in failed: code exchange rejected.', {
+    // OAuth error descriptions from TPC Auth are generic (e.g. "redirect_uri mismatch"), safe to show.
+    const reason = error instanceof Error ? ` (${error.message})` : '';
+    return new Response(`TPC Auth sign-in failed: code exchange rejected${reason}.`, {
       status: 401,
       headers: buildHeaders(clearedCookies),
     });
