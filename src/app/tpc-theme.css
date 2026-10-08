@@ -1,0 +1,49 @@
+/*
+ * TPC UI theme for Umami (TPC fork).
+ *
+ * Kept as a single additive override so upstream merges stay clean: it only
+ * remaps @umami/react-zen's semantic variables onto the hosted TPC UI tokens
+ * (https://ui.theportlandcompany.com/tokens.css, vendored as tpc-tokens.css).
+ * Token values live there, never here. Selectors are keyed on data-theme,
+ * which react-zen and the TPC prepaint script both set.
+ */
+:root,
+html[data-theme="light"],
+html[data-theme="dark"] {
+  --font-family: var(--font-sans);
+  --font-family-mono: var(--font-mono);
+  --radius-default: var(--radius-sm);
+  --shadow-default: var(--shadow-md);
+
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-ink);
+
+  --surface-base: var(--bg);
+  --surface-raised: var(--background);
+  --surface-sunken: var(--panel);
+  --surface-overlay: var(--bg);
+  --surface-inverted: var(--ink);
+  --surface-disabled: var(--panel);
+
+  --text-primary: var(--ink);
+  --text-muted: var(--ink-dim);
+  --text-disabled: color-mix(in oklab, var(--ink-dim) 65%, var(--bg));
+
+  --border-default: var(--line);
+  --border-muted: color-mix(in oklab, var(--line) 60%, var(--bg));
+  --border-strong: color-mix(in oklab, var(--ink-dim) 45%, var(--line));
+
+  --interactive-bg: var(--panel);
+  --interactive-bg-hover: color-mix(in oklab, var(--line) 70%, var(--panel));
+  --interactive-bg-pressed: var(--line);
+
+  --focus-ring: var(--accent);
+  --focus-ring-offset: var(--bg);
+
+  --status-error: var(--danger);
+}
+
+/* tokens.css light accent is 3.8:1 against white text; deepen it toward ink for AA (>=4.5:1). */
+html[data-theme='light'] {
+  --primary: color-mix(in oklab, var(--accent) 75%, var(--ink));
+}
