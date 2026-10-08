@@ -30,6 +30,7 @@ import {
 } from '@/components/icons';
 import { DOCS_URL } from '@/lib/constants';
 import { languages } from '@/lib/lang';
+import { persistTpcTheme } from '@/lib/tpc-theme';
 
 export interface UserButtonProps {
   showText?: boolean;
@@ -158,7 +159,10 @@ export function UserButton({ showText = true, onClose }: UserButtonProps) {
                 <Menu
                   selectionMode="single"
                   selectedKeys={new Set([theme])}
-                  onAction={key => setTheme(key as 'light' | 'dark')}
+                  onAction={key => {
+                    setTheme(key as 'light' | 'dark');
+                    persistTpcTheme(key as 'light' | 'dark');
+                  }}
                 >
                   <MenuItem id="light">
                     <Row alignItems="center" gap>
